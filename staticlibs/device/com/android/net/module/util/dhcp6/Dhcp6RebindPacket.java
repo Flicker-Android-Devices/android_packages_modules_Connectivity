@@ -17,6 +17,7 @@
 package com.android.net.module.util.dhcp6;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -29,11 +30,19 @@ import java.nio.ByteBuffer;
  */
 public class Dhcp6RebindPacket extends Dhcp6Packet {
     /**
-     * Generates a rebind packet with the specified parameters.
+     * Generates a rebind packet with the specified parameters including IA_PD and IA_NA.
      */
     Dhcp6RebindPacket(int transId, int elapsedTime, @NonNull final byte[] clientDuid,
-            @NonNull final byte[] iapd) {
-        super(transId, elapsedTime, clientDuid, null /* serverDuid */, iapd);
+            @Nullable final byte[] iapd, @Nullable final byte[] iana) {
+        super(transId, elapsedTime, clientDuid, null /* serverDuid */, iapd, iana);
+    }
+
+    /**
+     * Generates a rebind packet with the specified parameters (IA_PD only).
+     */
+    Dhcp6RebindPacket(int transId, int elapsedTime, @NonNull final byte[] clientDuid,
+            final byte[] iapd) {
+        this(transId, elapsedTime, clientDuid, iapd, null /* iana */);
     }
 
     /**
@@ -53,7 +62,12 @@ public class Dhcp6RebindPacket extends Dhcp6Packet {
 
         addTlv(packet, DHCP6_CLIENT_IDENTIFIER, getClientDuid());
         addTlv(packet, DHCP6_ELAPSED_TIME, (short) (mElapsedTime & 0xFFFF));
-        addTlv(packet, DHCP6_IA_PD, mIaPd);
+        if (mIaPd != null) {
+            addTlv(packet, DHCP6_IA_PD, mIaPd);
+        }
+        if (mIaNa != null) {
+            addTlv(packet, DHCP6_IA_NA, mIaNa);
+        }
 
         packet.flip();
         return packet;

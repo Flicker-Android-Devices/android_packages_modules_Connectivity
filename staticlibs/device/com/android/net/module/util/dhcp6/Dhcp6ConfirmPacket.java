@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2026 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.net.module.util.dhcp6;
+
+import androidx.annotation.NonNull;
+
+import java.nio.ByteBuffer;
+
+/**
+ * DHCPv6 CONFIRM packet class, a client sends a Confirm message to determine whether
+ * assigned IPv6 addresses are still appropriate to the link after roaming or reconnection.
+ *
+ * https://tools.ietf.org/html/rfc8415#section-18.2.3
+ */
+public class Dhcp6ConfirmPacket extends Dhcp6Packet {
+    Dhcp6ConfirmPacket(int transId, int elapsedTime, @NonNull final byte[] clientDuid,
+            @NonNull final byte[] iana) {
+        super(transId, elapsedTime, clientDuid, null /* serverDuid */, null /* iapd */, iana);
+    }
+
+    @Override
+    public byte getMessageType() {
+        return DHCP6_MESSAGE_TYPE_CONFIRM;
+    }
+
+    @Override
+    public ByteBuffer buildPacket() {
+        final ByteBuffer packet = ByteBuffer.allocate(DHCP_MAX_LENGTH);
+        final int msgTypeAndTransId = (DHCP6_MESSAGE_TYPE_CONFIRM << 24) | mTransId;
+        packet.putInt(msgTypeAndTransId);
+
+        addTlv(packet, DHCP6_CLIENT_IDENTIFIER, mClientDuid);
+        addTlv(packet, DHCP6_ELAPSED_TIME, (short) (mElapsedTime & 0xFFFF));
+        addTlv(packet, DHCP6_IA_NA, mIaNa);
+        addOroOption(packet, new short[] {
+            DHCP6_SOL_MAX_RT,
+            DHCP6_DNS_SERVERS,
+            DHCP6_DOMAIN_LIST
+        });
+
+        packet.flip();
+        return packet;
+    }
+}

@@ -50,6 +50,7 @@ import java.nio.ByteOrder;
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 public class IaAddressOption extends LegacyStruct {
+    private static final String TAG = IaAddressOption.class.getSimpleName();
     public static final int LENGTH = 24; // option length excluding IAaddr-options
 
     @Field(order = 0, type = Type.S16)
@@ -63,13 +64,48 @@ public class IaAddressOption extends LegacyStruct {
     @Field(order = 4, type = Type.U32)
     public final long valid;
 
-    IaAddressOption(final short code, final short length, final Inet6Address address,
+    public IaAddressOption(final short code, final short length, final Inet6Address address,
             final long preferred, final long valid) {
         this.code = code;
         this.length = length;
         this.address = address;
         this.preferred = preferred;
         this.valid = valid;
+    }
+
+    public IaAddressOption(final short length, final Inet6Address address,
+            final long preferred, final long valid) {
+        this((short) DHCP6_OPTION_IA_ADDR, length, address, preferred, valid);
+    }
+
+    /**
+     * Check whether or not IA Address option in IA_NA option is valid per RFC8415#section-21.6.
+     */
+    public boolean isValid() {
+        if (address == null) {
+            android.util.Log.w(TAG, "Invalid address: null");
+            return false;
+        }
+        if (preferred < 0) {
+            android.util.Log.w(TAG, "Invalid preferred lifetime: " + preferred);
+            return false;
+        }
+        if (valid < 0) {
+            android.util.Log.w(TAG, "Invalid valid lifetime: " + valid);
+            return false;
+        }
+        if (preferred > valid) {
+            android.util.Log.w(TAG, "Preferred lifetime > valid lifetime: " + this);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Check whether or not IA Address option has 0 preferred and valid lifetimes.
+     */
+    public boolean withZeroLifetimes() {
+        return preferred == 0 && valid == 0;
     }
 
     /**
@@ -80,5 +116,19 @@ public class IaAddressOption extends LegacyStruct {
         final IaAddressOption option = new IaAddressOption((short) DHCP6_OPTION_IA_ADDR,
                 length /* 24 + IAaddr-options length */, address, preferred, valid);
         return ByteBuffer.wrap(option.writeToBytes(ByteOrder.BIG_ENDIAN));
+    }
+
+    /**
+     * Build an IA Address option with no sub-options.
+     */
+    public static ByteBuffer build(final Inet6Address address,
+            final long preferred, final long valid) {
+        return build((short) LENGTH, address, preferred, valid);
+    }
+
+    @Override
+    public String toString() {
+        return "IA Address, length " + length + ": " + address + ", pref " + preferred + ", valid "
+                + valid;
     }
 }

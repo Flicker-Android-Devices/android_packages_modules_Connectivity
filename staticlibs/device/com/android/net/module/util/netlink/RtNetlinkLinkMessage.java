@@ -108,6 +108,26 @@ public class RtNetlinkLinkMessage extends NetlinkMessage {
                 interfaceName, NO_INET6_FLAGS);
     }
 
+    /**
+     * Constructs a {@link RtNetlinkLinkMessage} instance with inet6Flags.
+     */
+    @Nullable
+    public static RtNetlinkLinkMessage build(@NonNull StructNlMsgHdr nlmsghdr,
+            @NonNull StructIfinfoMsg ifinfomsg, int mtu, @Nullable MacAddress hardwareAddress,
+            @Nullable String interfaceName, int inet6Flags) {
+        if (mtu < 0) {
+            return null;
+        }
+        if (interfaceName != null
+                && (interfaceName.isEmpty() || interfaceName.length() + 1 > IFNAMSIZ)) {
+            return null;
+        }
+
+        nlmsghdr.nlmsg_len = calculateMessageLength(mtu, hardwareAddress, interfaceName);
+        return new RtNetlinkLinkMessage(nlmsghdr, ifinfomsg, mtu, hardwareAddress,
+                interfaceName, inet6Flags);
+    }
+
     private RtNetlinkLinkMessage(@NonNull StructNlMsgHdr nlmsghdr,
             @NonNull StructIfinfoMsg ifinfomsg, int mtu, @Nullable MacAddress hardwareAddress,
             @Nullable String interfaceName, int inet6Flags) {

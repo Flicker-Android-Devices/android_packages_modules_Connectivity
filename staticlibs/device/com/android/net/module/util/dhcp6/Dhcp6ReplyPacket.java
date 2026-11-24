@@ -17,6 +17,7 @@
 package com.android.net.module.util.dhcp6;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -29,12 +30,21 @@ import java.nio.ByteBuffer;
  */
 public class Dhcp6ReplyPacket extends Dhcp6Packet {
     /**
-     * Generates a reply packet with the specified parameters.
+     * Generates a reply packet with the specified parameters including IA_PD and IA_NA.
+     */
+    Dhcp6ReplyPacket(int transId, @NonNull final byte[] clientDuid,
+            @NonNull final byte[] serverDuid, @Nullable final byte[] iapd,
+            @Nullable final byte[] iana, boolean rapidCommit) {
+        super(transId, 0 /* elapsedTime */, clientDuid, serverDuid, iapd, iana);
+        mRapidCommit = rapidCommit;
+    }
+
+    /**
+     * Generates a reply packet with the specified parameters (IA_PD only).
      */
     Dhcp6ReplyPacket(int transId, @NonNull final byte[] clientDuid,
             @NonNull final byte[] serverDuid, final byte[] iapd, boolean rapidCommit) {
-        super(transId, 0 /* elapsedTime */, clientDuid, serverDuid, iapd);
-        mRapidCommit = rapidCommit;
+        this(transId, clientDuid, serverDuid, iapd, null /* iana */, rapidCommit);
     }
 
     /**
@@ -54,10 +64,17 @@ public class Dhcp6ReplyPacket extends Dhcp6Packet {
 
         addTlv(packet, DHCP6_CLIENT_IDENTIFIER, mClientDuid);
         addTlv(packet, DHCP6_SERVER_IDENTIFIER, mServerDuid);
-        addTlv(packet, DHCP6_IA_PD, mIaPd);
+        if (mIaPd != null) {
+            addTlv(packet, DHCP6_IA_PD, mIaPd);
+        }
+        if (mIaNa != null) {
+            addTlv(packet, DHCP6_IA_NA, mIaNa);
+        }
         if (mRapidCommit) {
             addTlv(packet, DHCP6_RAPID_COMMIT);
         }
+        addDnsServersOption(packet, mDnsServers);
+        addDomainListOption(packet, mDomainList);
 
         packet.flip();
         return packet;

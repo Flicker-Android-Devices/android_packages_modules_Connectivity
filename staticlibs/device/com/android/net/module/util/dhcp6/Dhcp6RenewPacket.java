@@ -17,6 +17,7 @@
 package com.android.net.module.util.dhcp6;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -29,11 +30,20 @@ import java.nio.ByteBuffer;
  */
 public class Dhcp6RenewPacket extends Dhcp6Packet {
     /**
-     * Generates a renew packet with the specified parameters.
+     * Generates a renew packet with the specified parameters including IA_PD and IA_NA.
+     */
+    Dhcp6RenewPacket(int transId, int elapsedTime, @NonNull final byte[] clientDuid,
+            @NonNull final byte[] serverDuid, @Nullable final byte[] iapd,
+            @Nullable final byte[] iana) {
+        super(transId, elapsedTime, clientDuid, serverDuid, iapd, iana);
+    }
+
+    /**
+     * Generates a renew packet with the specified parameters (IA_PD only).
      */
     Dhcp6RenewPacket(int transId, int elapsedTime, @NonNull final byte[] clientDuid,
             @NonNull final byte[] serverDuid, final byte[] iapd) {
-        super(transId, elapsedTime, clientDuid, serverDuid, iapd);
+        this(transId, elapsedTime, clientDuid, serverDuid, iapd, null /* iana */);
     }
 
     /**
@@ -54,7 +64,12 @@ public class Dhcp6RenewPacket extends Dhcp6Packet {
         addTlv(packet, DHCP6_SERVER_IDENTIFIER, mServerDuid);
         addTlv(packet, DHCP6_CLIENT_IDENTIFIER, mClientDuid);
         addTlv(packet, DHCP6_ELAPSED_TIME, (short) (mElapsedTime & 0xFFFF));
-        addTlv(packet, DHCP6_IA_PD, mIaPd);
+        if (mIaPd != null) {
+            addTlv(packet, DHCP6_IA_PD, mIaPd);
+        }
+        if (mIaNa != null) {
+            addTlv(packet, DHCP6_IA_NA, mIaNa);
+        }
 
         packet.flip();
         return packet;

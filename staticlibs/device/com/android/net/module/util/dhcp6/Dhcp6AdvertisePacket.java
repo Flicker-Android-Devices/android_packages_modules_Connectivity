@@ -17,6 +17,7 @@
 package com.android.net.module.util.dhcp6;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -28,11 +29,20 @@ import java.nio.ByteBuffer;
  */
 public class Dhcp6AdvertisePacket extends Dhcp6Packet {
     /**
-     * Generates an advertise packet with the specified parameters.
+     * Generates an advertise packet with the specified parameters including IA_PD and IA_NA.
+     */
+    Dhcp6AdvertisePacket(int transId, @NonNull final byte[] clientDuid,
+            @NonNull final byte[] serverDuid, @Nullable final byte[] iapd,
+            @Nullable final byte[] iana) {
+        super(transId, 0 /* elapsedTime */, clientDuid, serverDuid, iapd, iana);
+    }
+
+    /**
+     * Generates an advertise packet with the specified parameters (IA_PD only).
      */
     Dhcp6AdvertisePacket(int transId, @NonNull final byte[] clientDuid,
             @NonNull final byte[] serverDuid, final byte[] iapd) {
-        super(transId, 0 /* elapsedTime */, clientDuid, serverDuid, iapd);
+        this(transId, clientDuid, serverDuid, iapd, null /* iana */);
     }
 
     /**
@@ -52,7 +62,17 @@ public class Dhcp6AdvertisePacket extends Dhcp6Packet {
 
         addTlv(packet, DHCP6_CLIENT_IDENTIFIER, mClientDuid);
         addTlv(packet, DHCP6_SERVER_IDENTIFIER, mServerDuid);
-        addTlv(packet, DHCP6_IA_PD, mIaPd);
+        if (mIaPd != null) {
+            addTlv(packet, DHCP6_IA_PD, mIaPd);
+        }
+        if (mIaNa != null) {
+            addTlv(packet, DHCP6_IA_NA, mIaNa);
+        }
+        if (mPreference > 0) {
+            addTlv(packet, (short) DHCP6_PREFERENCE, (byte) mPreference);
+        }
+        addDnsServersOption(packet, mDnsServers);
+        addDomainListOption(packet, mDomainList);
 
         packet.flip();
         return packet;

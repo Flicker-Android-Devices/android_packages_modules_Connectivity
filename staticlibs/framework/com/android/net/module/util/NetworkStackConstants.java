@@ -264,7 +264,18 @@ public final class NetworkStackConstants {
     public static final int DHCP6_SERVER_PORT = 547;
     public static final Inet6Address ALL_DHCP_RELAY_AGENTS_AND_SERVERS =
             (Inet6Address) InetAddresses.parseNumericAddress("ff02::1:2");
+    public static final int DHCP6_OPTION_CLIENTID = 1;
+    public static final int DHCP6_OPTION_SERVERID = 2;
+    public static final int DHCP6_OPTION_IA_NA = 3;
+    public static final int DHCP6_OPTION_IA_TA = 4;
     public static final int DHCP6_OPTION_IA_ADDR = 5;
+    public static final int DHCP6_OPTION_ORO = 6;
+    public static final int DHCP6_OPTION_PREFERENCE = 7;
+    public static final int DHCP6_OPTION_ELAPSED_TIME = 8;
+    public static final int DHCP6_OPTION_STATUS_CODE = 13;
+    public static final int DHCP6_OPTION_RAPID_COMMIT = 14;
+    public static final int DHCP6_OPTION_DNS_SERVERS = 23;
+    public static final int DHCP6_OPTION_DOMAIN_LIST = 24;
     public static final int DHCP6_OPTION_IA_PD = 25;
     public static final int DHCP6_OPTION_IAPREFIX = 26;
 
